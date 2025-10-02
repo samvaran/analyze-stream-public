@@ -1,0 +1,7 @@
+.ipynb_checkpoints
+.venv
+venv
+recordings
+.DS_Store
+__pycache__
+.claude

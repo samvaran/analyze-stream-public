@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generating RPA Workflows Autonomously Through User Shadowing</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<h1>Efficiently Generating RPA Workflows Autonomously Through User Shadowing</h1>
+<h3>Samvaran Sharma | September 2025 | San Francisco</h3>
+<hr />
+<h1>GOAL</h1>
+<p>Create an AI-powered tool that can shadow a person doing computer work and automatically create RPA workflows based on observed repetitive behaviors. It can then suggest them to the user and eventually run them autonomously in an AI-native way, making it less brittle than traditional RPA. This can be deployed to entire teams, and eventually leverage network effects to automate an entire team's workflow.</p>
+<p>This paper outlines a variety of techniques and approaches that can accomplish this goal with an emphasis on efficiency. Since we want this approach to be scaled massively, it makes it infeasible to use expensive methods like feeding large amounts of video data into VLMs, in terms of both time and cost. The pipeline outlined below pursues a method that seeks to leverage relatively inexpensive techniques from image processing, signal analysis, graph theory, and more to reduce the size and complexity of the problem significantly before handing it off to more costly techniques (e.g. VLM or human review) to do the final steps. </p>
+<hr />
+<h1>HIGH-LEVEL OVERVIEW</h1>
+<p>The main goals are to autonomously understand what the user is doing, determine repetitive tasks, develop RPA workflows, and suggest or run them intelligently depending on what the user or team is doing.</p>
+<p>We want to place an emphasis on <strong>accuracy first</strong> and efficiency as a close second. For example, feeding all live video feeds into state of the art VLMs is incredibly expensive and slow. VLMs should be one tool in our toolbox.</p>
+<h2>The Four Core Questions</h2>
+<h3>1. What is the user doing?</h3>
+<p>This requires identifying where the user is focusing attention, and what action they're performing. Inexpensive deterministic machine vision approaches can be used to narrow the search window and then the contextual understanding can be done with AI (VLM).</p>
+<h3>2. Are they performing repetitive tasks?</h3>
+<p>You want to detect cycles. This can be done in a variety of ways, ranging from semantic analysis from the output of the "what is the user doing?" step to more objective machine vision based analysis. We can borrow techniques from signal analysis and graph theory to identify periodicity, cycles, etc. Once potential cycles are identified with less expensive methods, they can be reviewed by more accurate, expensive methods.</p>
+<h3>3. What is the workflow?</h3>
+<p>Once potential cycles are identified, the last step is to use a VLM to pin down the actual workflow the user is performing. This could then be converted into some sort of pseudocode or even real code that can then be executed later.</p>
+<h3>4. When should we run them?</h3>
+<p>Over time we will have developed a library of RPA workflows that can be triggered automatically. It's up to us now, working in tandem with the client team, to determine when to run them. We could suggest an RPA for the user to run when we see them starting to perform a loop next time around. They can potentially monitor the RPA to verify accuracy until they feel it's reliable enough. It could also be triggered by time of day like a cron job. Here is also where we can take advantage of network effects to learn to orchestrate a full set of RPAs in a certain order, automating an entire team's workflow. This part could potentially require a full separate AI-powered model and decision engine as well.</p>
+<hr />
+<h1>ALTERNATIVE APPROACHES CONSIDERED</h1>
+<h3>Network Traffic Interception</h3>
+<p>We could intercept and decode all network traffic going into and out of the machine to glean which API calls are being made, and simply automate those without having to worry about parsing screenshots. However, this is a bit tricky to do, and will involve installing software with admin privileges onto client devices. It might also cause security concerns.</p>
+<h3>Input Logging</h3>
+<p>Another option would be to augment machine vision approaches with a keylogger and mouse logger, but this has the same challenges as the network traffic approach.</p>
+<h3>Browser Extension</h3>
+<p>If the apps they are using are mostly in-browser, we could create a browser extension that can log very in-depth information about the user's actions, which URLs they are on, keylogging, mouse clicks, and even how the DOM elements change.</p>
+<hr />
+<h1>WHY MACHINE VISION</h1>
+<p>After considering these alternatives, machine vision emerges as the most viable approach for the time being. It offers a balance between accuracy and deployability without requiring admin privileges or raising significant security concerns. The key challenge becomes efficiently processing screen recordings to extract meaningful patterns.</p>
+<p>Let's zoom out for a second. As a thought exercise, imagine if we had a curated sequence of user actions as a JSON file, complete with timestamp, category of action, and a description of what specifically was being done.</p>
+<h2>Converting Actions to RPA Candidates</h2>
+<p>In order to turn this into a list of RPA candidates, we can leverage graph theory. First, create a state machine of the possible user actions. Then, trace out the path of the user through the state machine. Every time you detect a cycle (visiting an already-visited node) that has been traversed multiple times, you can save that as a potential repetitive task. We can then send this candidate for deeper analysis to a VLM, and then ultimately to a human to review it as well.</p>
+<h2>The Core Challenge</h2>
+<p>So the question becomes: <strong>How do we convert a screen recording into a curated sequence of user actions? And then how do we do it efficiently?</strong> This is a hard problem to solve.</p>
+<p><strong>Challenges:</strong> The user might not perform the repeated task the same way every time, or they might take breaks or get distracted or be multitasking. Understanding what the user is actually doing is a complex problem, and to do it in an automated way you would have to leverage a VLM, in addition to other techniques, to label it. Even after that it would likely have to be verified by a human. <strong>Main takeaway:</strong> This step is possible, but expensive.</p>
+<p><strong>Solution:</strong> We want to make sure we use this expensive tool only when needed. So we can start pursuing techniques that turn a screen recording video into a curated sequence of images that are set up well for the VLM.</p>
+<h2>Efficient Curation</h2>
+<p>How do we curate this set of images efficiently? How do we know which ones are important without using a VLM? This is where we can bust out a huge toolset of image processing, efficient ML techniques, signal analysis, and graph theory to help us filter for the highest value frames. Simpler tools can help us determine which specific frames might be interesting. More complex tools can help us determine which sequence of frames might be interesting.</p>
+<hr />
+<h1>THE PROCESSING PIPELINE</h1>
+<p>Using the techniques outlined in the sections below, we can effectively and efficiently whittle down the massive number of images in a screen recording video into a smaller curated selection that can then be analyzed with a VLM.</p>
+<h2>System Architecture Diagram</h2>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────────┐
+│                        CLIENT-SIDE PROCESSING                               │
+│  ┌──────────┐     ┌──────────────────┐     ┌─────────────────────┐          │
+│  │  Screen  │────▶│ Browser Client OR│────▶│  Motion Detection   │          │
+│  │  Activity│     │  Desktop App w/  │     │  Frame Filtering    │          │
+│  └──────────┘     │  caching         │     └─────────────────────┘          │
+│                   └──────────────────┘               │                      │
+│                                                      │ (cursor problem!)    │
+└──────────────────────────────────────────────────────┼──────────────────────┘
+                                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         SERVER-SIDE PROCESSING                              │
+│                                                                             │
+│  ┌──────────────────────────────────────────────────────────────────┐       │
+│  │                    IMAGE PROCESSING                              │       │
+│  │  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌────────────┐  │       │
+│  │  │Frame Diff  │─▶│Heat Map    │─▶│ Structure  │─▶│Smart Crop  │  │       │
+│  │  │(time-series)  │(morph.     │  │ (grayscale,│  │            │  │       │
+│  │  └────────────┘  │ dilation)  │  │edge detect)│  └────────────┘  │       │
+│  │                  └────────────┘  └────────────┘                  │       │
+│  └──────────────────────────────────────────────────────────────────┘       │
+│                                   │                                         │
+│                                   ▼                                         │
+│  ┌──────────────────────────────────────────────────────────────────┐       │
+│  │                    EFFICIENT ML TECHNIQUES                       │       │
+│  │  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌────────────┐  │       │
+│  │  │ Embeddings │─▶│    PCA     │─▶│ Clustering │  │    OCR     │  │       │
+│  │  │            │  │  Dim. Red. │  │            │  │ (metadata) │  │       │
+│  │  └────────────┘  └────────────┘  └────────────┘  └────────────┘  │       │
+│  │                     Optional: VAE (expensive to train, cheap to run)     │
+│  └──────────────────────────────────────────────────────────────────┘       │
+│                                   │                                         │
+│                                   ▼                                         │
+│  ┌────────────────────────────────────────────────────────────────────┐     │
+│  │              PATTERN DETECTION (Two Approaches)                    │     │
+│  │                                                                    │     │
+│  │  ┌────────────────────────────────┐  ┌──────────────────────────┐  │     │
+│  │  │   SIGNAL ANALYSIS              │  │  GRAPH THEORY (Pre-VLM)  │  │     │
+│  │  │                                │  │                          │  │     │
+│  │  │ • Autocorrelation on:          │  │ • Build abstract state   │  │     │
+│  │  │   - Pixel change time-series   │  │   machine from clusters  │  │     │
+│  │  │   - Embedding distances        │  │ • Labels: State_1, etc   │  │     │
+│  │  │ • Self-Similarity Matrix       │  │ • Detect cycles via DFS  │  │     │
+│  │  │ • Distance-Based Periodicity   │  │ • Weight by frequency    │  │     │
+│  │  │ • Dynamic Time Warping?        │  │                          │  │     │
+│  │  └────────────────────────────────┘  └──────────────────────────┘  │     │
+│  │                    │                           │                   │     │
+│  │                    └───────────┬───────────────┘                   │     │
+│  │                                ▼                                   │     │
+│  │                    Identify Candidate sequences/cycles             │     │
+│  └────────────────────────────────────────────────────────────────────┘     │
+└───────────────────────────────────┼─────────────────────────────────────────┘
+                                    ▼ Only interesting candidates
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         VLM ANALYSIS (Expensive)                            │
+│                                                                             │
+│  • Analyzes curated sequences from both approaches                          │
+│  • Labels with pre-defined schema                                           │
+│  • Identifies variables (name, date) vs actions                             │
+└──────────────────────────────────────────────┼──────────────────────────────┘
+                                               ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                 SEMANTIC STATE MACHINE (Post-VLM)                           │
+│                                                                             │
+│    &quot;Gmail Inbox&quot; ────▶ &quot;Excel Sheet&quot; ────▶ &quot;Slack Compose&quot;                  │
+│          ▲                                         │                        │
+│          └─────────────────────────────────────────┘                        │
+│                                                                             │
+│  • Human-readable labels                                                    │
+│  • Variables identified                                                     │
+│  • Ready for pseudocode generation                                          │
+└──────────────────────────────────────────────┼──────────────────────────────┘
+                                               ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    RPA GENERATION &amp; DEPLOYMENT                              │
+│                                                                             │
+│  • LLM converts to pseudocode using pre-built function library              │
+│  • Storage and verification with visual evidence                            │
+│  • Suggest when detecting user starting cycle                               │
+│  • Progress: Individual → Team → Organization orchestration                 │
+└─────────────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h2>Client Architecture</h2>
+<p>The client could potentially be just a webpage that users log in to (using a modern browser) and then they share their screen. The screenshare video stream will be sent to a server that feeds it into more powerful algorithms that can extract RPA workflow candidates. Some light preprocessing can perhaps be done on the client, in order to improve efficiency and bandwidth (e.g. not sending every frame, or downsampling before sending). We need to keep in mind that some client devices may be old and not very powerful, depending on the industry they are in.</p>
+<h2>Server Processing</h2>
+<p>Python-powered algorithms will preprocess the video and other data coming in, extract information from it, compare it to existing data, and determine if there are any repetitive tasks that can be logged and potentially automated with RPA. It then would attempt to create an RPA workflow autonomously, and ideally test it as well. Then, next time it detects the user starting the loop, it can suggest running the RPA instead. Eventually a large set of RPA workflows from an entire team or org can be accumulated and orchestrated to run on their own, with an overseeing AI agent or swarm.</p>
+<h2>VLM Analysis</h2>
+<p>Assuming the VLM is prompted and/or trained well, it can label the images with a pre-defined set of rules or schema so that a semantic state machine can be built. Data that is variable between the repeated tasks (i.e. the variables) can be identified (e.g. "name", "date"). Consistent data can be identified as actions, helping build a semantic state machine.</p>
+<h2>Semantic State Machine</h2>
+<p>Graph Cycle Detection is a huge topic unto itself, but we can use some well-known powerful approaches to our advantage here. We could find <em>all</em> potential cycles, regardless of size, and log them as candidates that can be automated, but this search space might be huge. <strong>Smarter approach:</strong> Analyze a bunch of screen recordings ahead of time, note the frequency of each state transition, and only filter for cycles made from edges that are commonly traversed. We can also use some of the same pattern recognition techniques from before on the time series sequence of states traversed by the user.</p>
+<h2>RPA Generation &amp; Deployment</h2>
+<p>Once we've identified cycles, we can leverage an LLM to effectively turn them into pseudocode for the RPA. We already know our "vocabulary" in a sense, based on the various states we've identified. We can pre-build a "library" of pseudocode functions. The trick is now to just convert these states and the transitions between them into pseudocode from our pre-built "library" of functions. These can now be saved and labeled as RPA candidates for manual review. We can store image sequences or even whole (edited) screen recordings of users traversing this cycle for more in-depth VLM and human verification. Over time, some of these RPA candidates will become more and more frequent, and we can be confident that they are good candidates to automate.</p>
+<hr />
+<h1>TECHNICAL IMPLEMENTATION</h1>
+<h2>Client-Side Image Processing</h2>
+<p><strong>Main Optimization Goals:</strong> The primary goals are to maintain a consistent video feed that doesn't drop frames or get interrupted or delayed too much, while also being efficient enough to save both processing power and network bandwidth.</p>
+<p><strong>Important Considerations:</strong> It will be very important to survey the types of clients that will be running this: what hardware and software they're using, how old the machines are, their network speed, whether they're on WiFi or hardwired or tethered, and whether they're constantly connected or not. If internet connection is unreliable, we might need to resort to a desktop app that runs this type of client algorithm locally with caching of video.</p>
+<p><strong>Motion Detection Algorithm:</strong> We could experiment with adding client-side motion detection and cutting out frames with little information. Ideally, if the mouse could be ignored, we could cut out a <em>lot</em> of unnecessary frames that just have the mouse moving, but <strong>getting the cursor to be hidden during WebRTC screen recording has been hard</strong>. The core algorithm works as follows: subtract current frame from the previous, take the absolute value, perform thresholding, and you're left with a map of all the pixels that have changed. We use this to determine whether to send the video frame or not.</p>
+<p><strong>Performance Optimizations:</strong> Depending on the type of clients that are running this, we could use a GPU-accelerated library to use matrix operations to make this very fast. Otherwise, you could make it faster with some accuracy tradeoffs: downsampling, only checking a certain percentage of random pixels, or checking every other frame. It might be useful to standardize the video size being sent, or scale it depending on hardware capabilities.</p>
+<hr />
+<h2>Server-Side Image Processing</h2>
+<p><strong>Frame Diff:</strong> This is a more in-depth version of the frame diff algorithm we might do on the client. The process involves subtracting the current frame from the previous one, taking the absolute value of each pixel, performing thresholding, and calculating secondary characteristics such as percentage of pixels that changed. We can also add in calculations from the past N frames. This can be represented as time-series data for later analysis.</p>
+<p><strong>Heat Map:</strong> The frame diff approach not only tells us how many pixels changed, but where they are. We can use this to create a heat map over the entire image by performing a morphological dilation and then adding a gaussian blur. This heat map can be integrated into the image itself in order to help with embedding/clustering. For instance, treating the heatmap as an opacity filter over the image, or inserting it as one of the RGB channels.</p>
+<p><strong>Cropping:</strong> We can use the heatmap to inform image cropping as well. These could be used in addition to the full-size screenshots for more reliable analysis of what the user is currently doing. We could potentially do embedding and analysis on both the overall screenshot and the local cropped "where the action is" section.</p>
+<p><strong>Structure over Color:</strong> We can experiment with de-emphasizing color (since people may be using different themes or superficial UI settings on different machines) and increasing emphasis on structure by converting the image to grayscale, increasing contrast, and performing canny edge detection. This could potentially be integrated into the image itself, e.g. inserting it as one of the RGB channels.</p>
+<hr />
+<h2>Efficient ML Techniques</h2>
+<p><strong>Image Embeddings:</strong> An elegant way to analyze video frames and group similar frames together is to use image embeddings to convert images into a vector in high dimensional space.</p>
+<p><strong>PCA (Principal Component Analysis):</strong> PCA can be used in combination with the image embeddings to reduce the dimensionality of the high-dimensional vectors. This helps with both analysis and visualization.</p>
+<p><strong>OCR (Optical Character Recognition):</strong> Additional metadata can be added by performing OCR on the screenshot. It might be tough to get very structured information from the screenshot of a UI, but even something semi-deterministic can add to the accuracy of embeddings or other similarity-clustering approaches.</p>
+<p><strong>VAE (Variational Autoencoder):</strong> VAEs are <strong>expensive to train, but cheap to run</strong>. If we have a library of screen recordings that cover the majority of the tasks that users will do, we could train a VAE on the images or on data derived from the images (e.g. embeddings, scaled down images, etc) to create a latent space that automatically clusters similar elements together. We can then use this to "label" information efficiently.</p>
+<p><strong>Clustering:</strong> We can use other ML Clustering techniques on the embedding vectors or lower-dimension vectors from PCA to achieve the same goal of efficiently "labeling" user actions.</p>
+<hr />
+<h2>Signal Analysis Techniques</h2>
+<p><strong>Overview:</strong> These techniques excel at efficiently detecting patterns in time-series data that are fixed-interval.</p>
+<p><strong>Autocorrelation:</strong> We can compare the signal to a shifted version of itself to detect periodic peaks of similarity. This can be done on the time-series data of pixel change over time, or directly on a series of high-dimensional vectors. This includes related methods such as using a Self-Similarity Matrix.</p>
+<p><strong>Distance-Based Periodicity:</strong> This approach is conceptually similar to the percentage of pixels changing over time, but can be applied on the embedding vectors. We calculate distance between embedding vectors for successive frames instead of percentage of pixels changed. From here you can use autocorrelation techniques again to find periodicity.</p>
+<p><strong>Dynamic Time Warping:</strong> This technique finds similar sequences even when they're stretched or compressed in time. It uses dynamic programming to find minimum-cost alignment between sequences. It's more resistant to variations but is potentially much more expensive.</p>
+<hr />
+<h2>Graph Theory Techniques</h2>
+<p><strong>Pre-VLM Analysis:</strong> We talked about using graph theory to identify cycles once the VLM has labeled the images for us and turned them into a list of user actions, but interestingly we can also leverage graph theory's power <strong>even before</strong> we ask the VLM to do this expensive task.</p>
+<p><strong>The Approach:</strong> The trick is to create the state machine on information that is cheaper to derive from each image, rather than the expensive VLM technique. This is where we can leverage the clustering techniques we mentioned earlier. The process involves using clustering on images, data derived from images, or a combination of the two; creating abstract "labels" for similar types of data that have been grouped together; and then creating the state machine and start detecting cycles.</p>
+<p><strong>Abstract vs. Semantic State Machine:</strong> This is basically a reflection of the later stage that we are optimizing for, but done in a more automated, abstract way. As such, it might be less useful to a human looking at it directly, since the labels aren't very meaningful yet. But it could still be very useful in determining sequences of images that warrant further analysis with a VLM.</p>
+<hr />
+<h2>Identifying Candidate Sequences for RPA</h2>
+<p><strong>Signal Analysis Insights:</strong> The signal analysis techniques excel at highlighting fixed-length periodicity. So sections where the user is performing a bunch of repetitive actions, such as data entry, would be highlighted well by these techniques. We might seek to find such highly regular sections, then take out a 2-period sequence for further analysis (since we can't tell where the workflow starts and stops just from periodicity data). </p>
+<p><strong>Abstract Graph Theory Insights:</strong> Graph theory can do a better job of understanding repeated behaviors even if they don't have a fixed-length periodicity. The pre-VLM state machine that we can build after performing clustering analysis on the dimensionally-reduced embedding vectors is a helpful starting point to gleaning potential cycles. Once we've identified some likely cycles we can crop out instances of that cycle being completed from the video and send it in for deeper analysis with a VLM. We can also consider sampling the clusters randomly and sending individual frames to the VLM to see if clusters seem to be organizing themselves according to actions or UI states already.</p>
+<p><strong>Leveraging the VLM:</strong> The sections of video corresponding to the candidates for RPA identified by these two techniques can be saved. We could potentially use some additional techniques (such as change over time) to reduce the amount of largely-redundant frames, lower the FPS, and then send basically a sequence of images to the VLM, with additional metadata (e.g. timestamp, OCR results, previous detected actions and states, etc). We want to use the VLM to not only describe what the user is doing over time, but also build up a "vocabulary" of actions that are commonly taken which we can use to build our "pseudocode" that can be fed to an agent for RPA. </p>
+<p><strong>Custom AI Techniques:</strong> If we have a massive amount of data, we might even look into creating custom embeddings for common UI patterns, or even potentially training a small LLM with custom tokens corresponding to different states, actions, or psuedocode vocabulary. So in the same way that traditional LLMs predict the next word, this small LLM could predict the next state or action.</p>
+<hr />
+<h1>TECHNICAL CHALLENGES</h1>
+<h2>The Cursor Problem</h2>
+<p>Ideally, if the mouse could be ignored, we could cut out a <em>lot</em> of unnecessary frames that just have the mouse moving. However, <strong>getting the cursor to be hidden during WebRTC screen recording has been hard</strong>. This affects both bandwidth optimization and frame selection efficiency.</p>
+<h2>Human Variation</h2>
+<p>Humans aren't robots, so there will be natural variation in how they perform the same task repetitively. This could make it hard for signal analysis techniques to work. However, if we cut out frames where nothing much is going on, or are selective about which frames we choose to add to the sequence, repeated tasks may look more similar to one another.</p>
+<h2>Task Complexity</h2>
+<p>The user might not perform the repeated task the same way every time, or they might take breaks or get distracted or be multitasking. Understanding what the user is actually doing is a complex problem, and to do it in an automated way you would have to leverage a VLM, in addition to other techniques, to label it. Even after that it would likely have to be verified by a human.</p>
+<h2>Client Diversity</h2>
+<p>We need to account for what hardware and software clients are using, how old the machines are, network speed, whether they're on WiFi or hardwired or tethered, and whether they're constantly connected or not. If internet connection is unreliable, we might need to resort to a desktop app that runs this type of client algorithm locally with caching of video.</p>
+<hr />
+<h1>DEPLOYMENT STRATEGY</h1>
+<p>Once we have a set of RPAs, we can do cycle detection during the user's traversal. If we note that they are traversing a commonly traversed cycle that we have an RPA for, we can suggest it to them to run. As a baby step, we could suggest a smaller RPA for just the next N steps in the task. An even smaller step could be to create a user-friendly automatically generated guide to all common workflows that workers can easily reference, complete with example recordings and step-by-step instructions. Over time we can do a similar type of state machine analysis over the whole org, and automate entire multi-user processes. We can also identify inefficiencies this way, and suggest more efficient ways to accomplish the same task if it can't be fully automated.</p>
+<hr />
+<h1>CONCLUSION</h1>
+<p>This system represents a different approach to RPA: one that learns by observing rather than being explicitly programmed. The core idea is to combine efficient computer vision techniques with strategic use of expensive AI models to automatically identify and automate repetitive workflows at scale.</p>
+<p>The key insight is the layered architecture. Inexpensive techniques filter and curate the data, while expensive VLM analysis is reserved only for high-value candidates. Signal analysis detects fixed-interval patterns, graph theory identifies structural cycles, and together they guide us to the workflows worth automating. This efficiency-first approach makes it viable to deploy across entire organizations.</p>
+<p>We can start with individual users and progress to team-wide orchestration. The system builds a living library of workflows that grows smarter over time. As network effects take hold, the automation can become increasingly intelligent about when and how to suggest interventions, potentially enabling autonomous execution of complex multi-step processes across an entire organization.</p>
+<p>The path forward is iterative. We begin with simple pattern detection, validate with human oversight, and progressively expand the system's autonomy as confidence grows. This pragmatic approach balances the promise of full automation with the reality that human judgment remains essential—at least initially—for ensuring accuracy and building trust.</p>
+</body>
+</html>
