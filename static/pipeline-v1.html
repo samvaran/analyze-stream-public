@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Proof of Concept: Autonomous RPA Pipeline</title>
+    <title>Proof of Concept: Autonomous RPA Generation Pipeline</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<h1>Proof of Concept: Autonomous RPA Pipeline</h1>
+<h1>Proof of Concept: Autonomous RPA Generation Pipeline</h1>
 <h3>Samvaran Sharma | September 2025 | San Francisco</h3>
 <hr />
-<p>This proof of concept demonstrates the first three stages of the autonomous RPA workflow detection system: <strong>Image Processing</strong>, <strong>Efficient ML Techniques</strong>, and <strong>Pattern Detection</strong>. We process a short screen recording through the pipeline to show how raw video becomes actionable insight without requiring expensive VLM analysis at every step.</p>
+<p>This proof of concept demonstrates the first three stages of the autonomous RPA (Robot Process Automation) workflow detection system: <strong>Image Processing</strong>, <strong>Efficient ML Techniques</strong>, and <strong>Pattern Detection</strong>. We process a short screen recording through the pipeline to show how raw video becomes actionable insight without requiring expensive VLM analysis at every step.</p>
 <hr />
 <h1>IMAGE PROCESSING</h1>
 <p>The pipeline starts with a screen recording of repetitive data entry work. Raw video contains thousands of frames, most redundant or low-information. Our goal is to identify where the user is actually working and filter out noise.</p>
@@ -26,7 +26,7 @@
 <hr />
 <h1>EFFICIENT ML TECHNIQUES</h1>
 <p>Raw pixels aren't enough—we need semantic understanding without the cost of running a VLM on every frame. Image embeddings convert visual information into high-dimensional vectors that capture meaning.</p>
-<h2>UMAP: The Hidden Geometry of Work</h2>
+<h2>UMAP: Visualizing High Dimensional Space</h2>
 <video src="../generated/grid_umap.mp4" autoplay loop muted playsinline style="width: 100%; max-width: 100%;"></video>
 
 <p><strong>CLIP Embeddings:</strong> We extract 512-dimensional embeddings from both the full combined view and the smart crop. These vectors encode what's happening in each frame—no labels required.</p>
@@ -45,7 +45,7 @@
 <p>Concatenating both embeddings combines global context with local detail. K-means clustering then partitions this space into discrete states. Each color represents an abstract workflow state. The boundaries emerge naturally from the data—distinct clusters for different tasks, tight loops for repetitive actions, no supervision required.</p>
 <hr />
 <h1>PATTERN DETECTION</h1>
-<p>Now we apply graph theory and signal analysis to detect repetitive behaviors without semantic labels.</p>
+<p>Now we apply signal analysis to detect repetitive behaviors without semantic labels.</p>
 <h2>Multi-Modal Pattern Analysis</h2>
 <video src="../generated/grid_patterns.mp4" autoplay loop muted playsinline style="width: 100%; max-width: 100%;"></video>
 
@@ -72,6 +72,5 @@
 <p><strong>VLM Analysis:</strong> Send only the identified candidate cycles to a vision-language model for semantic labeling. Instead of analyzing 1,910 frames, we analyze perhaps 20-30 key sequences.</p>
 <p><strong>Semantic State Machine:</strong> VLM output transforms abstract states into meaningful labels ("Gmail Inbox", "Excel Data Entry", "Slack Message"). Variables are identified ("name", "date").</p>
 <p><strong>RPA Generation:</strong> An LLM converts the labeled workflow into pseudocode using a pre-built function library. The result is an executable RPA that can be tested, refined, and deployed.</p>
-<p>The architecture works. Efficient curation makes expensive AI practical. The system learns by watching, not by being told. This is how we scale autonomous RPA to entire organizations.</p>
 </body>
 </html>
